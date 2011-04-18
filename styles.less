@@ -1,0 +1,32 @@
+.node {
+  > em {display: block;}
+  display: inline-block;
+  margin-right: 2em;
+}
+.node-table {
+  .bad { background-color: red !important; }
+  td, tr {
+    border-width: 0;
+    margin: 0;
+    padding: 0;
+    height: 10px;
+  }
+  td {
+    min-width: 10px;
+  }
+  .vb-current {
+    outline: 1px solid red;
+  }
+}
+.props-table {
+  border: 1px solid black;
+  padding: 2px;
+  th:last-child {
+    width: 84px;
+  }
+  th {border-bottom: 1px solid black;}
+  td:last-child {
+    border-left: 1px solid black;
+    text-align: right;
+  }
+}
