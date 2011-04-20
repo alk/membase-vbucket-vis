@@ -12,9 +12,10 @@ function alkDoInfect(frameURL) {
   document.body.appendChild(frameElement);
   frameElement.setAttribute('src', frameURL);
   var frame = frameElement.contentWindow;
-  setTimeout(function () {
+  var initialInterval = setInterval(function () {
+    console.log("posting initial message");
     frame.postMessage("initial", frameURL);
-  }, 100);
+  }, 200);
 
   var service = {
     "eval": function () {
@@ -51,6 +52,11 @@ function alkDoInfect(frameURL) {
   function recvMessage(event) {
     if (event.source != frame)
       return;
+
+    if (initialInterval !== undefined) {
+      clearInterval(initialInterval);
+      initialInterval = undefined;
+    }
 
     var data = event.data;
     if (!(data instanceof Array)) {
