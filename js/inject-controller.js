@@ -17,7 +17,7 @@ var InjectionController = {
       console.log("got initial message!");
       this.slaveFrame = event.source;
       this.slaveOrigin = event.origin;
-      this.onConnected(this);
+      this.onConnectedInternal(this);
       return;
     }
 
@@ -40,6 +40,27 @@ var InjectionController = {
 
     console.log("unable to route message:", event);
   },
+  onConnectedInternal: function () {
+    var self = this;
+    var res = self.slaveApply(function () {
+      res.continuous = true;
+      res.onResult = function () {
+        // second call is fatal. Means, opener is dead (unloaded/closed)
+        alert("opener is closed!. Nothing will work");
+        window.close();
+      }
+      window.addEventListener("unload", function () {
+        self.slaveFrame.postMessage(["cancel"], self.slaveOrigin);
+      });
+      self.onConnected();
+    }, function (reply) {
+      // disable logout timer
+      LogoutTimer.onTimout = function () {}
+      LogoutTimer.reset();
+      reply(); // and signal we're ready
+      window.addEventListener("unload", function () {reply()}, false);
+    });
+  },
   slaveApplyResult: function (onResult, id) {
     var self = this;
     return {
@@ -49,21 +70,27 @@ var InjectionController = {
         delete self.waiting[id];
       },
       call: function (_ignored, event) {
-        this.cancel();
-        onResult.apply(null, event.data.args);
+        this.onResult.apply(null, event.data.args);
+        if (!this.continuous) {
+          this.cancel();
+        }
       }
     };
   },
-  slaveApply: function (onResult, body/*, args... */) {
+  assertConnected: function () {
     if (!this.slaveFrame) {
       throw new Error("not initialized!");
     }
+  },
+  slaveApply: function (onResult, body/*, args... */) {
+    this.assertConnected();
 
     var id = this.generateId();
     var msg = ["eval2", String(body), id].concat(Array.prototype.slice.call(arguments, 2));
     var waiter = this.slaveApplyResult(onResult, id);
     this.waiting[id] = waiter;
     this.slaveFrame.postMessage(msg, this.slaveOrigin);
+    return waiter;
   },
   slaveGetFunction: function (replyFn, url) {
     $.get(url, function (data) {

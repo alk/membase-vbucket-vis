@@ -1,26 +1,8 @@
-console.log("masTER!");
-
 function BUG(msg) {
   alert(msg);
   debugger;
   throw new Error(msg);
 }
-
-// function sendAndWait(msg, body) {
-//   if (!slaveFrame)
-//     BUG("!slaveFrame");
-//   waitMessage(function (event) {
-//     body(event.data);
-//   });
-//   slaveFrame.postMessage(msg, slaveOrigin);
-// }
-
-// function slaveGet(url, body) {
-//   var f = (function (reply, url) {
-//     $.get(url, reply);
-//   }).toString();
-//   sendAndWait(["eval2", f, url], body);
-// }
 
 function createSimpleElement(name) {
   var dotpos = name.indexOf(".");
@@ -86,26 +68,22 @@ function buildHTML(data) {
 
 
 var bucketName;
-
 function initialize() {
-  console.log("connected!");
-  InjectionController.slaveApply(function () {
-    console.log("pong!");
+  console.log("pong!");
 
-    var body = document.body;
-    body.setAttribute("style", "white-space:pre;");
-    body.textContent = "ready!";
-    bucketName = "default";
-    (function () {
-      var match = /\?(.*?)(?:$|#)/.exec(window.location.href);
-      if (!match)
-        return;
-      var params = String(match[1]).toQueryParams();
-      if (params.bucket)
-        bucketName = params.bucket;
-    })();
-    updateData();
-  }, function (reply) {reply()});
+  var body = document.body;
+  body.setAttribute("style", "white-space:pre;");
+  body.textContent = "ready!";
+  bucketName = "default";
+  (function () {
+    var match = /\?(.*?)(?:$|#)/.exec(window.location.href);
+    if (!match)
+      return;
+    var params = String(match[1]).toQueryParams();
+    if (params.bucket)
+      bucketName = params.bucket;
+  })();
+  updateData();
 }
 
 InjectionController.onConnected = initialize;
@@ -118,9 +96,37 @@ function updateData() {
     body.removeAttribute("style");
     body.appendChild(buildHTML(["div.buttons",
                                 ["button", {"onclick": "less.refresh();"}, "refresh styles"],
-                                ["button", {"onclick": "updateData();"}, "refresh data"]]));
+                                ["button", {"onclick": "updateData();"}, "refresh data"],
+                                ["button", {"onclick": "reloadPage();"}, "reload page"]]));
     renderVBuckets(data);
   })
+}
+
+function reloadPage() {
+  var secret = String((new Date()).valueOf()) + "_" + String(Math.random());
+  var c = InjectionController;
+
+  c.slaveApply(armed, slaveBody, secret);
+
+  function slaveBody(armed, secret) {
+    function handler(event) {
+      if (event.data != secret)
+        return;
+      window.removeEventListener("message", handler, false);
+      setTimeout(function () {
+        injectIntoMembase(frameURL, frame);
+      }, 100);
+    }
+    window.addEventListener("message", handler, false)
+    armed();
+  }
+
+  function armed() {
+    window.addEventListener("unload", function () {
+      c.slaveFrame.postMessage(secret, c.slaveOrigin);
+    }, false);
+    document.location.reload();
+  }
 }
 
 function bestSquareSize(vbucketsNum) {

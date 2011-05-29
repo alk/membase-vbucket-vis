@@ -3,15 +3,24 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>VBuckets visualization</title>
-<link rel="stylesheet/less" type="text/css" href="styles.less">
+<link rel="stylesheet/less" type="text/css" href="styles.less"></link>
 <script src="js/less.js" type="text/javascript"></script>
 <script src="js/prototype.js" type="text/javascript"></script>
 <script src="js/prototype.js" type="text/javascript"></script>
 <script src="js/inject-controller.js" type="text/javascript"></script>
 </head>
 <body>
-Wait a bit..
+<p id="status-box"></p>
+<script>
+(function (statusBox) {
+  if (!window.opener) {
+    statusBox.innerHTML = "This needs to be opened via special bookmarklet";
+  } else {
+    statusBox.innerHTML = "Waiting initial message from membase tab/window....";
+  }
+})(document.getElementById("status-box"));
+</script>
+<!-- hhmts start -->Last modified: Sat May 28 22:14:57 PDT 2011 <!-- hhmts end -->
 </body>
 <script src="vbuckets-vis.js"></script>
-<!-- hhmts start -->Last modified: Sat May 28 19:26:12 PDT 2011 <!-- hhmts end -->
 </html>
