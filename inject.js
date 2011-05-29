@@ -1,32 +1,41 @@
-// javascript:(function(d,s1,h){s1=d.createElement('script');s1.setAttribute('src','http://lh-alt:9000/js/infect.js');alkInfectURL="http://lh-alt:9000/vbuckets-vis.html";h=d.querySelector('body');h.appendChild(s1);})(document);
+// javascript:(function(d,url,injectURL,fIn,f,s,n){n=Date.parse(Date());f=fIn?fIn:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://lh:4567/vbuckets-vis.html','http://lh:4567/inject.js',window.reinjectThis);
 
-//__f=function(prop,propV,v){v=document.createElement('script');v.setAttribute('src',src);return(v)}; document.createElement('script');_vis_s.setAttribute('src', 'http://lh-alt:9000/js/inject.js')document.scrdocument.querySelector("head").appendChild(
+function injectIntoMembase(frameURL, frame) {
+  var initialTStamp = (new Date()).valueOf();
 
-// javascript:(function(){readConvertLinksToFootnotes=false;readStyle='style-newspaper';readSize='size-medium';readMargin='margin-narrow';_readability_script=document.createElement('script');_readability_script.type='text/javascript';_readability_script.src='http://lab.arc90.com/experiments/readability/js/readability.js?x='+(Math.random());document.documentElement.appendChild(_readability_script);_readability_css=document.createElement('link');_readability_css.rel='stylesheet';_readability_css.href='http://lab.arc90.com/experiments/readability/css/readability.css';_readability_css.type='text/css';_readability_css.media='all';document.documentElement.appendChild(_readability_css);_readability_print_css=document.createElement('link');_readability_print_css.rel='stylesheet';_readability_print_css.href='http://lab.arc90.com/experiments/readability/css/readability-print.css';_readability_print_css.media='print';_readability_print_css.type='text/css';document.getElementsByTagName('head')[0].appendChild(_readability_print_css);})();
-
-function alkDoInfect(frameURL) {
-  window.alkInfectURL = null;
   window.addEventListener("message", recvMessage, false);
-  var frameElement = document.createElement("iframe");
-  frameElement.setAttribute("style", "position:absolute;left:0;top:0;width:100%;height:100%;background:white;");
-  document.body.appendChild(frameElement);
-  frameElement.setAttribute('src', frameURL);
-  var frame = frameElement.contentWindow;
+
   var initialInterval = setInterval(function () {
     console.log("posting initial message");
     frame.postMessage("initial", frameURL);
-  }, 200);
+
+    var now = (new Date()).valueOf();
+    if (initialTStamp + 60000 < now) {
+      console.log("No reply for 60 secs. Aborting activity");
+      service.cancel();
+    }
+  }, 500);
 
   var service = {
     "eval": function () {
       frame.postMessage(eval(arguments[0]), frameURL);
     },
+    "cancel": function () {
+      if (initialInterval != null) {
+        clearInterval(initialInterval);
+        initialInterval = null;
+      }
+      window.removeEventListener("message", recvMessage, false);
+      injectIntoMembase.activeServices = injectIntoMembase.activeServices.filter(function (e) {return e !== service});
+    },
     "eval2": function () {
       (function (f, args) {
-        function postMsg(data) {
-          frame.postMessage(data, frameURL);
+        var id = args[1];
+        function postMsg() {
+          var arr = Array.prototype.slice.call(arguments, 0);
+          frame.postMessage({args: arr, id: id}, frameURL);
         }
-        f.apply(null, [postMsg].concat(Array.prototype.slice.call(args, 1)));
+        f.apply(null, [postMsg].concat(Array.prototype.slice.call(args, 2)));
       })(eval("("+arguments[0]+")"), arguments);
     },
     "xhr": function (openArgs, sendArg, headers, responseHeaders) {
@@ -65,6 +74,9 @@ function alkDoInfect(frameURL) {
     console.log("obeying command from master: ", data);
     service[data[0]].apply(service, data.slice(1));
   }
-}
-if (window.alkInfectURL)
-  alkDoInfect(alkInfectURL);
+
+  injectIntoMembase.activeServices.push(service);
+
+  return service;
+};
+injectIntoMembase.activeServices = [];

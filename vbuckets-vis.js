@@ -1,25 +1,4 @@
-var pendingMessages = [];
-var pendingHandler;
-var slaveFrame;
-
 console.log("masTER!");
-
-function onMessage(event) {
-  console.log("got event:", event);
-  if (event.data == "initial") {
-    slaveFrame = event.source;
-    slaveOrigin = event.origin;
-    return initialize();
-  }
-  if (pendingHandler) {
-    var handler = pendingHandler;
-    pendingHandler = null;
-    return handler(event);
-  }
-  pendingMessages.push(event);
-}
-
-window.addEventListener("message", onMessage, false);
 
 function BUG(msg) {
   alert(msg);
@@ -27,53 +6,21 @@ function BUG(msg) {
   throw new Error(msg);
 }
 
-function waitMessage(body) {
-  if (pendingMessages.length) {
-    setTimeout(function () {
-      body(pendingMessages.shift);
-    }, 0);
-    return;
-  }
-  if (pendingHandler) {
-    BUG("unsupported waitMessage stacking!");
-  }
-  pendingHandler = body;
-}
+// function sendAndWait(msg, body) {
+//   if (!slaveFrame)
+//     BUG("!slaveFrame");
+//   waitMessage(function (event) {
+//     body(event.data);
+//   });
+//   slaveFrame.postMessage(msg, slaveOrigin);
+// }
 
-function sendAndWait(msg, body) {
-  if (!slaveFrame)
-    BUG("!slaveFrame");
-  waitMessage(function (event) {
-    body(event.data);
-  });
-  slaveFrame.postMessage(msg, slaveOrigin);
-}
-
-function slaveGet(url, body) {
-  var f = (function (reply, url) {
-    $.get(url, reply);
-  }).toString();
-  sendAndWait(["eval2", f, url], body);
-}
-
-// mostly stolen from MIT-licensed prototypejs.org (String#toQueryParams)
-function deserializeQueryString(dataString) {
-  return _.reduce(dataString.split('&'), { }, function(hash, pair) {
-    if ((pair = pair.split('='))[0]) {
-      var key = decodeURIComponent(pair.shift());
-      var value = pair.length > 1 ? pair.join('=') : pair[0];
-      if (value != undefined) value = decodeURIComponent(value);
-
-      if (key in hash) {
-        if (!_.isArray(hash[key]))
-          hash[key] = [hash[key]];
-        hash[key].push(value);
-      }
-      else hash[key] = value;
-    }
-    return hash;
-  })
-}
+// function slaveGet(url, body) {
+//   var f = (function (reply, url) {
+//     $.get(url, reply);
+//   }).toString();
+//   sendAndWait(["eval2", f, url], body);
+// }
 
 function createSimpleElement(name) {
   var dotpos = name.indexOf(".");
@@ -141,24 +88,32 @@ function buildHTML(data) {
 var bucketName;
 
 function initialize() {
-  var body = document.body;
-  body.setAttribute("style", "white-space:pre;");
-  body.textContent = "ready!";
-  bucketName = "default";
-  (function () {
-    var match = /\?(.*?)(?:$|#)/.exec(window.location.href);
-    if (!match)
-      return;
-    var params = deserializeQueryString(match[1]);
-    if (params.bucket)
-      bucketName = params.bucket;
-  })();
-  updateData();
+  console.log("connected!");
+  InjectionController.slaveApply(function () {
+    console.log("pong!");
+
+    var body = document.body;
+    body.setAttribute("style", "white-space:pre;");
+    body.textContent = "ready!";
+    bucketName = "default";
+    (function () {
+      var match = /\?(.*?)(?:$|#)/.exec(window.location.href);
+      if (!match)
+        return;
+      var params = String(match[1]).toQueryParams();
+      if (params.bucket)
+        bucketName = params.bucket;
+    })();
+    updateData();
+  }, function (reply) {reply()});
 }
+
+InjectionController.onConnected = initialize;
+InjectionController.init();
 
 function updateData() {
   var body = document.body;
-  slaveGet("/diag/vbuckets?bucket=" + encodeURIComponent(bucketName), function (data) {
+  InjectionController.slaveGet("/diag/vbuckets?bucket=" + encodeURIComponent(bucketName), function (data) {
     body.innerHTML = '';
     body.removeAttribute("style");
     body.appendChild(buildHTML(["div.buttons",
