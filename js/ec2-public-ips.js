@@ -5,7 +5,7 @@ InjectionController.init();
 function reloadData() {
   InjectionController.slaveApply(onResult, function (reply) {
     // unfortunately due to bug in /diag/eval implementation we have to call eval from inside eval :(, thus extra escaping
-    var code = 'S = "{json, [rpc:call(N, erlang, apply, [fun () -> {struct, [{nodeName, N}, {masterNode, rpc:call(N, mb_master, master_node, [])}, {publicIP, list_to_binary(os:cmd(\\"curl -s http://169.254.169.254/latest/mata-data/public-ipv4\\"))}]} end, []]) || N <- [node() | nodes()]]}.",' +
+    var code = 'S = "{json, [rpc:call(N, erlang, apply, [fun () -> {struct, [{nodeName, N}, {masterNode, rpc:call(N, mb_master, master_node, [])}, {publicIP, list_to_binary(os:cmd(\\"curl -s http://169.254.169.254/latest/meta-data/public-ipv4\\"))}]} end, []]) || N <- [node() | nodes()]]}.",' +
       '{value, V, _} = eshell:eval(S,[]), V.';
     $.post("/diag/eval", code, function (data, status) {
       reply(data, status);
