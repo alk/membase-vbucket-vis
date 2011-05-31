@@ -1,0 +1,45 @@
+
+How to use membase addon injection framework
+============================================
+
+Membase addon injection framework allow you to inject arbitrary
+'addons' to Membase UI. User 'navigates' to js bookmarklet which will
+open your addon tab/window and link it with original membase UI
+tab/window.
+
+Here's sample bookmarklet:
+
+javascript:(function(d,url,injectURL,f,s,n){n=Date.parse(Date());f=f?f:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://lh:4567/ec2-public-ips.html','http://lh:4567/inject.js',window.reinjectThis);
+
+You need'll need to change url to inject.js script and to your page. It can be arbitrary (and possibly 2 different) domain(s).
+
+On your addon page include inject-controller.js from this
+project. Assign your readiness function to
+InjectionController.onConnected and invoke InjectionController.init().
+
+When tabs linking procedure (that requires postMessage to work, so IE
+is out of the game) is done your readiness function will be called.
+
+After that you can control membase UI from your 'addon'.
+
+Primary method is InjectionController.slaveApply(yourReadyCallback, slaveCode/*, extraArgs... */).
+
+slaveCode will be sent (_as text_ !) to Membase UI page and will be
+tranformed back to function and will be applied with callback and your
+extra args. NOTE: because it's not possible to pass complete closures
+across domains we're passing as text, but this means that your
+slaveCode function cannot see variables from your environment. So
+extraArgs is the only convenient way to pass values with your code.
+
+When you slave code is ready to 'return' value to your 'addon' page it
+should call passed callback with any value(s) it needs to return. This
+will cause yourReadyCallback to be called with that 'return values'.
+
+Here's example:
+
+InjectionController.slaveApply(
+  function (data) {console.log("Got data: ", data);},
+  function (reply) {$.post("/diag/eval", "1+1.", reply);});
+
+Here you force Membase UI page to do post to /diag/eval and send
+result back to your function that'll log it.
