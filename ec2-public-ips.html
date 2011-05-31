@@ -3,10 +3,10 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <title>EC2 public ips</title>
-<script src="js/inject-controller.js" type="text/javascript"></script>
+<script src="js/inject-controller.js?v=2" type="text/javascript"></script>
 <script src="js/prototype.js" type="text/javascript"></script>
 <script src="js/mustache.js" type="text/javascript"></script>
-<script src="js/ec2-public-ips.js"></script>
+<script src="js/ec2-public-ips.js?v=2"></script>
 </head>
 <body>
 <p id="status-box"></p>
@@ -19,14 +19,15 @@
   }
 })(document.getElementById("status-box"));
 </script>
-<button onclick="reloadData();">Reload</button><br>
+<button onclick="reloadData();">Reload</button> <button onclick="InjectionController.reloadPage();">Refresh page (purging caches)</button><br>
 <p id="address-list"></p>
 <script type="text/html+mustache" id="address-list-template">
-<dl>
+<table>
   {{#pairs}}
-  <dt>{{nodeName}}</dt><dd>- {{publicIP}} ({{masterNode}})</dd>
+  <tr><td>{{nodeName}}</td><td>{{privateIP}}</td><td>{{publicIP}}</td><td>{{masterNode}}</td></tr>
   {{/pairs}}
-</dl>
+</table>
+<p>{{#pairs}}{{publicIP}} {{/pairs}}</p>
 </script>
 </body>
 </html>

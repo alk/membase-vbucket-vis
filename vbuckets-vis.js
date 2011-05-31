@@ -97,36 +97,9 @@ function updateData() {
     body.appendChild(buildHTML(["div.buttons",
                                 ["button", {"onclick": "less.refresh();"}, "refresh styles"],
                                 ["button", {"onclick": "updateData();"}, "refresh data"],
-                                ["button", {"onclick": "reloadPage();"}, "reload page"]]));
+                                ["button", {"onclick": "InjectionController.reloadPage();"}, "reload page"]]));
     renderVBuckets(data);
   })
-}
-
-function reloadPage() {
-  var secret = String((new Date()).valueOf()) + "_" + String(Math.random());
-  var c = InjectionController;
-
-  c.slaveApply(armed, slaveBody, secret);
-
-  function slaveBody(armed, secret) {
-    function handler(event) {
-      if (event.data != secret)
-        return;
-      window.removeEventListener("message", handler, false);
-      setTimeout(function () {
-        injectIntoMembase(frameURL, frame);
-      }, 100);
-    }
-    window.addEventListener("message", handler, false)
-    armed();
-  }
-
-  function armed() {
-    window.addEventListener("unload", function () {
-      c.slaveFrame.postMessage(secret, c.slaveOrigin);
-    }, false);
-    document.location.reload();
-  }
 }
 
 function bestSquareSize(vbucketsNum) {
