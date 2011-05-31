@@ -1,4 +1,5 @@
 // javascript:(function(d,url,injectURL,fIn,f,s,n){n=Date.parse(Date());f=fIn?fIn:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://lh:4567/vbuckets-vis.html','http://lh:4567/inject.js',window.reinjectThis);
+// javascript:(function(d,url,injectURL,fIn,f,s,n){n=Date.parse(Date());f=fIn?fIn:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://lh:4567/ec2-public-ips.html','http://lh:4567/inject.js',window.reinjectThis);
 
 function injectIntoMembase(frameURL, frame) {
   var initialTStamp = (new Date()).valueOf();

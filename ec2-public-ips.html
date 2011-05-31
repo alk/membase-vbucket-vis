@@ -1,0 +1,32 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>EC2 public ips</title>
+<script src="js/inject-controller.js" type="text/javascript"></script>
+<script src="js/prototype.js" type="text/javascript"></script>
+<script src="js/mustache.js" type="text/javascript"></script>
+<script src="js/ec2-public-ips.js"></script>
+</head>
+<body>
+<p id="status-box"></p>
+<script>
+(function (statusBox) {
+  if (!window.opener) {
+    statusBox.innerHTML = "This needs to be opened via special bookmarklet";
+  } else {
+    statusBox.innerHTML = "Waiting initial message from membase tab/window....";
+  }
+})(document.getElementById("status-box"));
+</script>
+<button onclick="reloadData();">Reload</button><br>
+<p id="address-list"></p>
+<script type="text/html+mustache" id="address-list-template">
+<dl>
+  {{#pairs}}
+  <dt>{{nodeName}}</dt><dd>- {{publicIP}}</dd>
+  {{/pairs}}
+</dl>
+</script>
+</body>
+</html>
